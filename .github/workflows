@@ -1,1 +1,41 @@
+name: Deploy Go Docker App
 
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            cd /root/go-docker-demo
+
+            # Pull the latest code
+            git pull origin main
+
+            # Build the new image first to reduce app downtime
+            docker build -t go-docker-demo .
+
+            # Stop and remove the old running container
+            docker stop go-demo || true
+            docker rm go-demo || true
+
+            # Run the newly built container
+            docker run -d \
+              --name go-demo \
+              -p 8080:8080 \
+              --restart unless-stopped \
+              go-docker-demo
+
+            # Clean up old unused images to save disk space
+            docker image prune -f
