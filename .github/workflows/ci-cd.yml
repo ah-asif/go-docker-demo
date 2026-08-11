@@ -9,13 +9,9 @@ on:
       - main
 
 jobs:
-  # ==========================================
-  # 1. CI JOB: Run tests & verify Docker build
-  # ==========================================
   test:
     name: Run Tests & Build Check
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,7 +19,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod' # Automatically uses the Go version defined in your go.mod
+          go-version-file: 'go.mod'
           cache: true
 
       - name: Run Go tests
@@ -32,22 +28,22 @@ jobs:
       - name: Verify Docker build
         run: docker build -t go-docker-demo:test .
 
-  # ==========================================
-  # 2. CD JOB: Deploy to VPS (Runs only if CI passes)
-  # ==========================================
   deploy:
     name: Deploy to VPS
-    needs: test # <--- Blocks deployment if 'test' fails
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' # <--- Only deploys on merge/push to main, not on PRs
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
+      # Connect to your custom Headscale server
       - name: Connect to Tailscale
         uses: tailscale/github-action@v2
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          login-server: https://network.zendevz.com
 
+      # Deploy via SSH over the private Headscale IP
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1.2.2
         with:
