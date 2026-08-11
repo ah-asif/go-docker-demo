@@ -18,7 +18,7 @@ func main() {
 	http.HandleFunc("/", home)
 	http.HandleFunc("/health", health)
 
-	fmt.Println("Hello Motherfucker, I'm running on port 8080")
+	fmt.Println("Hello World, I'm running on port 8080")
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {

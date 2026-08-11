@@ -35,6 +35,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Connect to your custom Headscale server
       - name: Connect to Tailscale
         uses: tailscale/github-action@v2
         with:
@@ -42,6 +43,7 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           login-server: https://network.zendevz.com
 
+      # Deploy via SSH over the private Headscale IP
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1.2.2
         with:
