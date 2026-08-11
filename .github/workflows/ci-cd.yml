@@ -35,7 +35,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Connect to your custom Headscale server
       - name: Connect to Tailscale
         uses: tailscale/github-action@v2
         with:
@@ -43,25 +42,40 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           login-server: https://network.zendevz.com
 
-      # Deploy via SSH over the private Headscale IP
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1.2.2
         with:
-          host: 100.64.0.31
+          host: 100.64.0.33
           username: root
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
+            set -e
+
+            # 1. Ensure directory exists
+            if [ ! -d "/root/go-docker-demo" ]; then
+              git clone https://github.com/${{ github.repository }}.git /root/go-docker-demo
+            fi
+
             cd /root/go-docker-demo
 
-            git pull origin main
-            docker build -t go-docker-demo .
-            docker stop go-demo || true
-            docker rm go-demo || true
+            # 2. Fetch and checkout clean state
+            git fetch origin main
+            git reset --hard origin/main
+
+            # 3. Build new image with cache
+            docker build -t go-docker-demo:latest .
+
+            # 4. Zero-downtime container replacement
+            docker stop go-demo 2>/dev/null || true
+            docker rm go-demo 2>/dev/null || true
+
+            # 5. Run new container
             docker run -d \
               --name go-demo \
               -p 8080:8080 \
               --restart unless-stopped \
-              go-docker-demo
+              go-docker-demo:latest
 
+            # 6. Cleanup unused dangling images
             docker image prune -f
