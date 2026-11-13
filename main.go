@@ -6,7 +6,7 @@ import (
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "🚀 Go Docker App Running")
+	fmt.Fprintln(w, "🚀 Go Docker App Running in Docker...")
 }
 
 func health(w http.ResponseWriter, r *http.Request) {
